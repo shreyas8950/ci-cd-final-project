@@ -1,0 +1,93 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: cd-pipeline
+spec:
+  workspaces:
+    - name: pipeline-workspace
+  params:
+    - name: repo-url
+      type: string
+      description: The Git repository URL to clone
+    - name: branch
+      type: string
+      description: The Git branch to checkout
+      default: "main"
+    - name: build-image
+      type: string
+      description: The container image to build and push
+      default: "image-registry.openshift-image-registry.svc:5000/sn-labs/hit-counter:latest"
+  tasks:
+    - name: init
+      taskRef:
+        name: cleanup
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
+
+    - name: clone
+      taskRef:
+        name: git-clone
+        kind: ClusterTask
+      runAfter:
+        - init
+      workspaces:
+        - name: output
+          workspace: pipeline-workspace
+      params:
+        - name: url
+          value: $(params.repo-url)
+        - name: revision
+          value: $(params.branch)
+
+    - name: lint
+      taskRef:
+        name: flake8
+      runAfter:
+        - clone
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
+      params:
+        - name: image
+          value: "python:3.9-slim"
+        - name: args
+          value: ["service", "--count", "--max-complexity=10", "--max-line-length=127", "--statistics"]
+
+    - name: tests
+      taskRef:
+        name: nose
+      runAfter:
+        - lint
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
+      params:
+        - name: args
+          value: "-v --with-spec --spec-color --with-coverage --cover-package=service"
+
+    - name: build
+      taskRef:
+        name: buildah
+        kind: ClusterTask
+      runAfter:
+        - tests
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
+      params:
+        - name: IMAGE
+          value: $(params.build-image)
+
+    - name: deploy
+      taskRef:
+        name: openshift-client
+        kind: ClusterTask
+      runAfter:
+        - build
+      params:
+        - name: SCRIPT
+          value: |
+            oc create deployment hit-counter --image=$(params.build-image) --dry-run=client -o yaml | oc apply -f -
+            oc expose deployment/hit-counter --port=8000 --target-port=8000 --dry-run=client -o yaml | oc apply -f -
+            oc create route edge hit-counter --service=hit-counter --dry-run=client -o yaml | oc apply -f -
