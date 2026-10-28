@@ -1,11 +1,13 @@
-# CI/CD Final Project: Hit Counter Service
+# ci-cd-final-project
 
 [![CI Workflow](https://github.com/shreyas8950/ci-cd-final-project/actions/workflows/workflow.yml/badge.svg)](https://github.com/shreyas8950/ci-cd-final-project/actions)
 [![Python 3.9](https://img.shields.io/badge/python-3.9-blue.svg)](https://www.python.org/downloads/release/python-390/)
 [![Coverage](https://img.shields.io/badge/coverage-98%25-brightgreen.svg)](https://github.com/shreyas8950/ci-cd-final-project)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-This repository contains the completed final project for the Coursera course **Continuous Integration and Continuous Delivery (CI/CD)** / **CI/CD Tools and Practices** offered by IBM Developer Skills Network.
+## Project Name: ci-cd-final-project
+
+This repository contains the completed final project `ci-cd-final-project` for the Coursera course **Continuous Integration and Continuous Delivery (CI/CD)** / **CI/CD Tools and Practices** offered by IBM Developer Skills Network.
 
 The project demonstrates an end-to-end cloud-native CI/CD pipeline featuring a RESTful Python Flask microservice (Hit Counter Service) automated with **GitHub Actions** for Continuous Integration and **Tekton / Red Hat OpenShift Pipelines** for Continuous Deployment.
 
